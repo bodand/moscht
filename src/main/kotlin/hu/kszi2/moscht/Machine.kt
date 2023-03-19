@@ -1,14 +1,19 @@
 package hu.kszi2.moscht
 
 import java.time.Instant
-import java.util.*
+import java.time.temporal.ChronoUnit
 
-enum class MachineStatus {
-    Available,
-    InUse,
-    Unknown;
+class MachineStatus(val status: MachineStatusType, val lastStatus: Instant) {
+    enum class MachineStatusType {
+        Available, InUse, Unknown
+    }
 
-    val since: Date = Date.from(Instant.EPOCH)
+    fun effectiveStatus(unknownThreshold: Int = 2): MachineStatusType {
+        val now = Instant.now()
+        val diff = ChronoUnit.HOURS.between(lastStatus, now)
+        if (diff > unknownThreshold) return MachineStatusType.Unknown
+        return status
+    }
 }
 
 sealed class MachineType {
