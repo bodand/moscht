@@ -7,28 +7,35 @@ import hu.kszi2.moscht.MachineStatus
 import hu.kszi2.moscht.MachineStatus.*
 import hu.kszi2.moscht.MachineType
 import java.time.Instant
-import java.time.temporal.ChronoUnit
-import java.util.*
 
-class DefaultJsonParser(val unknownThreshold: Int = 3) : MachineJsonParser {
+class DefaultJsonParser(val unknownThreshold: Int = 3) : MachineParser {
     @Serializable
-    private data class Level(val id: Int, val machines: List<InternalMachine>, val last_query_time: String)
+    private data class Level(
+        val id: Int,
+        val machines: List<InternalMachine>,
+        @SerialName("last_query_time") val lastQueryTime: String
+    )
 
     @Serializable
-    private data class InternalMachine(val id: Int, val type: String, val status: Int, val message: String?)
+    private data class InternalMachine(
+        val id: Int,
+        @SerialName("kind_of") val type: String,
+        val status: Int,
+        val message: String?,
+    )
 
-    override fun parseJson(payload: String): List<Machine> {
+    override fun parse(payload: String): List<Machine> {
         val internals = Json.decodeFromString<List<Level>>(payload)
         return internals.flatMap { lvl ->
             lvl.machines.map { machine ->
-                Machine(lvl.id, parseTypeShortString(machine.type), parseStatus(machine.status, lvl.last_query_time))
+                Machine(lvl.id, parseTypeShortString(machine.type), parseStatus(machine.status, lvl.lastQueryTime))
             }
         }
     }
 
     private fun parseTypeShortString(shortType: String): MachineType {
         return when (shortType) {
-            "WS" -> MachineType.WashingMachine
+            "WM" -> MachineType.WashingMachine
             "DR" -> MachineType.Dryer
             else -> MachineType.Unknown(shortType)
         }

@@ -1,6 +1,5 @@
 package hu.kszi2.moscht.parsing
 
-import hu.kszi2.moscht.MachineStatus
 import hu.kszi2.moscht.MachineType
 import org.intellij.lang.annotations.Language
 import org.junit.Test
@@ -18,7 +17,7 @@ class SyncJsonParserTest {
 
     @Test
     fun `Json parser returns empty list from empty json list`() {
-        val res = parser.parseJson("[]")
+        val res = parser.parse("[]")
 
         assertTrue(res.isEmpty())
     }
@@ -26,20 +25,20 @@ class SyncJsonParserTest {
     @Test
     fun `Json parser throws for parsing objects`() {
         assertThrows("{}", Exception::class.java) {
-            parser.parseJson("{}")
+            parser.parse("{}")
         }
     }
 
     @Test
     fun `Json parser throws for parsing the empty string`() {
         assertThrows(Exception::class.java) {
-            parser.parseJson("")
+            parser.parse("")
         }
     }
 
     @Test
     fun `Json parser returns empty list for levels without machines`() {
-        @Language("JSON") val res = parser.parseJson(
+        @Language("JSON") val res = parser.parse(
             """
             [
               {
@@ -117,7 +116,7 @@ class SyncJsonParserTest {
 
     @Test
     fun `Json parser returns correct machine data with only washing machine`() {
-        @Language("JSON") val res = parser.parseJson(
+        @Language("JSON") val res = parser.parse(
             """
             [
               {
