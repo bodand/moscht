@@ -17,6 +17,7 @@ import hu.kszi2.moscht.rendering.gui.filters.StatusEntryFilter
 import hu.kszi2.moscht.rendering.gui.filters.TypeEntryFilter
 import hu.kszi2.moscht.rendering.gui.filterStatus
 import hu.kszi2.moscht.rendering.gui.filterTypes
+import hu.kszi2.moscht.rendering.gui.filters.FloorFilter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -47,13 +48,17 @@ class GuiRenderer : MachineRenderer {
                 val (typeFilter, setTypeFilter) = remember {
                     mutableStateOf(EntryMapFilter.makeFilter<TypeEntryFilter>())
                 }
+                val (floorsFilter, setFloorsFilter) = remember {
+                    mutableStateOf(FloorFilter(""))
+                }
 
                 Row {
                     Column(Modifier.width(300.dp)) {
+                        filterFloors(floorsFilter, setFloorsFilter)
                         filterTypes(typeFilter, setTypeFilter)
                         filterStatus(statusFilter, setStatusFilter)
                     }
-                    machinesListView(machines, ConjunctionFilter(statusFilter, typeFilter))
+                    machinesListView(machines, ConjunctionFilter(floorsFilter, statusFilter, typeFilter))
                 }
             }
         }
