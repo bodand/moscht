@@ -1,7 +1,6 @@
 package hu.kszi2.moscht.filter
 
 import hu.kszi2.moscht.Machine
-import javax.crypto.Mac
 
 sealed class JoinerFilter(
     private val lhs: MachineFilter,
@@ -29,18 +28,3 @@ class ConjunctionFilter(
             : this(starter, splitByTwo(filters))
 }
 
-class DisjunctionFilter(
-    lhs: MachineFilter,
-    rhs: MachineFilter
-) : JoinerFilter(lhs, rhs, { a, b -> a || b }) {
-    companion object {
-        private fun splitByTwo(filters: Array<out MachineFilter>): MachineFilter {
-            return filters.fold(MachineFilter.emptyFilter) { left, acc ->
-                DisjunctionFilter(left, acc)
-            }
-        }
-    }
-
-    constructor(starter: MachineFilter, vararg filters: MachineFilter)
-            : this(starter, splitByTwo(filters))
-}

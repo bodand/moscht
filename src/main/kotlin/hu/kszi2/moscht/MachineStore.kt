@@ -1,7 +1,6 @@
 package hu.kszi2.moscht
 
 import hu.kszi2.moscht.filter.MachineFilter
-import javax.crypto.Mac
 
 class MachineStore(private val machines: List<Machine> = listOf()) {
     suspend fun reloadFromApi(api: MosogepAsyncApi) = MachineStore(api.loadMachines())
