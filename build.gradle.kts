@@ -17,8 +17,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
     implementation("io.ktor:ktor-client-core:2.2.4")
     implementation("io.ktor:ktor-client-cio:2.2.4")
-    implementation("junit:junit:4.13.2")
     implementation(compose.desktop.currentOs)
+    testImplementation("junit:junit:4.13.2")
 }
 
 compose.desktop {
