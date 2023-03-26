@@ -3,9 +3,14 @@ package hu.kszi2.moscht.rendering
 import hu.kszi2.moscht.Machine
 import hu.kszi2.moscht.MachineStatus
 import hu.kszi2.moscht.MachineType
+import hu.kszi2.moscht.MosogepAsyncApi
 
 class SimpleCliRenderer : MachineRenderer {
-    override fun renderMachine(machine: Machine) {
+    override suspend fun renderData(api: MosogepAsyncApi) {
+        api.loadMachines().forEach(::renderMachine)
+    }
+
+    private fun renderMachine(machine: Machine) {
         println("${machine.level}. szinti ${renderType(machine.type)}: ${renderStatus(machine.status)}")
     }
 
