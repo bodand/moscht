@@ -1,0 +1,7 @@
+Moscht -- MosogépSCH kliens
+
+Moscht egy asztali kliens, a https://mosogep.sch.bme.hu weboldal helyett,
+ahonnan lehetséges a Schönherz kollégiumi mosógépek állapotáról tájékozódni.
+Moscht egy grafikus felülettel rendelkező alkalmazás, amelyik különböző szűrőket
+biztosít, az eszközöket tartalmazó lista szűrésére, pl. azon elemeket jeleníti
+csak meg, amelyek jelenleg elérhetőek.

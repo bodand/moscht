@@ -1,13 +1,19 @@
 package hu.kszi2.moscht.rendering
 
-import hu.kszi2.moscht.Machine
-import hu.kszi2.moscht.MachineStatus
-import hu.kszi2.moscht.MachineType
-import hu.kszi2.moscht.MosogepAsyncApi
+import hu.kszi2.moscht.*
+import java.lang.RuntimeException
 
 class SimpleCliRenderer : MachineRenderer {
-    override suspend fun renderData(api: MosogepAsyncApi) {
-        api.loadMachines().forEach(::renderMachine)
+    override suspend fun renderData(vararg apis: MosogepAsyncApi) {
+        val ex = RuntimeException("Cannot reach any API")
+        for (api in apis) {
+            try {
+                return api.loadMachines().forEach(::renderMachine)
+            } catch (timeout: MosogepAsyncApi.UnreachableApiError) {
+                ex.addSuppressed(timeout)
+            }
+        }
+        throw ex
     }
 
     private fun renderMachine(machine: Machine) {

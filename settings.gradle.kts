@@ -6,3 +6,4 @@ pluginManagement {
 }
 
 rootProject.name = "moscht"
+include("native-notif")

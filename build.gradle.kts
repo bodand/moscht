@@ -17,6 +17,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
     implementation("io.ktor:ktor-client-core:2.2.4")
     implementation("io.ktor:ktor-client-cio:2.2.4")
+    implementation("ch.qos.logback:logback-classic:1.4.6")
     implementation(compose.desktop.currentOs)
     testImplementation("junit:junit:4.13.2")
 }
@@ -33,6 +34,14 @@ tasks.jar {
         .runtimeClasspath
         .get()
         .map(::zipTree)
-    from(dependencies)
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    val notifRelease = project("native-notif").tasks["linkRelease"].outputs.files.filter {
+        it.extension in arrayOf("dll", "so", "dylib")
+    }.files
+    manifest.attributes["Moscht-Notification"] = notifRelease.take(1)[0].name
+
+    dependsOn(project("native-notif").tasks["linkRelease"])
+
+    from(dependencies + notifRelease)
 }

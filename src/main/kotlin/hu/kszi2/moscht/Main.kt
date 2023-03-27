@@ -11,6 +11,7 @@ suspend fun main(args: Array<String>) {
             GuiRenderer()
         }
 
-    val api = MosogepApiV1()
-    renderer.renderData(api)
+    val apiv1 = MosogepApiV1()
+    val apiv2 = MosogepApiV2()
+    renderer.renderData(apiv1, apiv2)
 }

@@ -10,33 +10,69 @@ import java.time.Instant
 
 class DefaultJsonParser(val unknownThreshold: Int = 3) : MachineParser {
     @Serializable
-    private data class Level(
+    private data class LevelV1(
         val id: Int,
-        val machines: List<InternalMachine>,
-        @SerialName("last_query_time") val lastQueryTime: String
+        val machines: List<InternalMachineV1>,
+        @SerialName("last_query_time") val lastQueryTime: String,
     )
 
     @Serializable
-    private data class InternalMachine(
+    private data class InternalMachineV1(
         val id: Int,
         @SerialName("kind_of") val type: String,
         val status: Int,
         val message: String?,
     )
 
+    @Serializable
+    private data class ResponseObjectV2(
+        val floors: List<LevelV2>,
+    )
+
+    @Serializable
+    private data class LevelV2(
+        val id: Int,
+        val machines: List<InternalMachineV2>,
+    )
+
+    @Serializable
+    private data class InternalMachineV2(
+        val id: Int,
+        @SerialName("kindOf") val type: String,
+        val status: String,
+        val lastQueryTime: String,
+        val lastChanged: String,
+    )
+
     override fun parse(payload: String): List<Machine> {
-        val internals = Json.decodeFromString<List<Level>>(payload)
-        return internals.flatMap { lvl ->
-            lvl.machines.map { machine ->
-                Machine(lvl.id, parseTypeShortString(machine.type), parseStatus(machine.status, lvl.lastQueryTime))
+        return try {
+            val internals = Json.decodeFromString<List<LevelV1>>(payload)
+            internals.flatMap { lvl ->
+                lvl.machines.map { machine ->
+                    Machine(lvl.id, parseTypeShortString(machine.type), parseStatus(machine.status, lvl.lastQueryTime))
+                }
             }
+        } catch (ex: SerializationException) { // could not parse as v1 response, try v2
+            val internals = Json.decodeFromString<ResponseObjectV2>(payload)
+            internals.floors
+                .flatMap { lvl ->
+                    lvl.machines
+                        .map { machine ->
+                            Machine(
+                                lvl.id,
+                                parseTypeShortString(machine.type),
+                                parseStatus(machine.status, machine.lastQueryTime)
+                            )
+                        }
+                }
+                .sortedBy(Machine::level)
         }
     }
 
     private fun parseTypeShortString(shortType: String): MachineType {
         return when (shortType) {
-            "WM" -> MachineType.WashingMachine
-            "DR" -> MachineType.Dryer
+            "WM", "Washer" -> MachineType.WashingMachine
+            "DR", "Dryer" -> MachineType.Dryer
             else -> MachineType.Unknown(shortType)
         }
     }
@@ -45,6 +81,15 @@ class DefaultJsonParser(val unknownThreshold: Int = 3) : MachineParser {
         val statType = when (returnedStatus) {
             0 -> MachineStatusType.Available
             1 -> MachineStatusType.InUse
+            else -> MachineStatusType.Unknown
+        }
+        return MachineStatus(statType, Instant.parse(queryTime))
+    }
+
+    private fun parseStatus(returnedStatus: String, queryTime: String): MachineStatus {
+        val statType = when (returnedStatus) {
+            "Available" -> MachineStatusType.Available
+            "NotAvailable" -> MachineStatusType.InUse
             else -> MachineStatusType.Unknown
         }
         return MachineStatus(statType, Instant.parse(queryTime))

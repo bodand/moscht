@@ -1,16 +1,17 @@
 package hu.kszi2.moscht.rendering
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.application
-import androidx.compose.ui.window.rememberWindowState
+import androidx.compose.ui.window.*
 import hu.kszi2.moscht.*
 import hu.kszi2.moscht.filter.ConjunctionFilter
+import hu.kszi2.moscht.notify.DummyNotifier
+import hu.kszi2.moscht.notify.Notifier
+import hu.kszi2.moscht.notify.NotifierFactory
 import hu.kszi2.moscht.rendering.gui.*
 import hu.kszi2.moscht.rendering.gui.filters.EntryMapFilter
 import hu.kszi2.moscht.rendering.gui.filters.StatusEntryFilter
@@ -18,22 +19,39 @@ import hu.kszi2.moscht.rendering.gui.filters.TypeEntryFilter
 import hu.kszi2.moscht.rendering.gui.filterStatus
 import hu.kszi2.moscht.rendering.gui.filterTypes
 import hu.kszi2.moscht.rendering.gui.filters.FloorFilter
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import org.slf4j.LoggerFactory
 
 class GuiRenderer : MachineRenderer {
-    override suspend fun renderData(api: MosogepAsyncApi) {
-        val initialMachines = api.loadMachines()
+    private suspend fun loadApis(apis: Array<out MosogepAsyncApi>): List<Machine> {
+        for (api in apis) {
+            try {
+                return api.loadMachines()
+            } catch (ex: MosogepAsyncApi.UnreachableApiError) {
+                LoggerFactory.getLogger(GuiRenderer::class.java).error(
+                    ex.stackTraceToString()
+                )
+            }
+        }
+        return emptyList()
+    }
+
+    override suspend fun renderData(vararg apis: MosogepAsyncApi) {
         application {
-            val scope = rememberCoroutineScope()
+            val (notifier, setNotifier) = remember {
+                mutableStateOf<Notifier>(DummyNotifier())
+            }
             val (machines, setMachines) = remember {
-                mutableStateOf(MachineStore(initialMachines))
+                mutableStateOf(MachineStore())
             }
 
-            scope.launch(Dispatchers.IO) {
-                delay(10000)
-                setMachines(machines.reloadFromApi(api))
+            LaunchedEffect(key1 = Unit) {
+                val notif = NotifierFactory.load()
+                notif.enable()
+                setNotifier(notif)
+
+                val loaded = loadApis(apis)
+                setMachines(MachineStore(loaded))
+                notif.sendNotification("asdasd")
             }
 
             Window(

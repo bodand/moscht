@@ -8,22 +8,21 @@ import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
 import io.ktor.http.*
-import java.lang.Exception
 
-class MosogepApiV1(private val parser: MachineAsyncParser = DefaultAsyncParser()) : MosogepAsyncApi {
+class MosogepApiV2(private val parser: MachineAsyncParser = DefaultAsyncParser()) : MosogepAsyncApi {
     private val webClient = HttpClient(CIO)
 
     override suspend fun loadMachines(): List<Machine> {
         try {
-            val status = webClient.get("https://mosogep.sch.bme.hu/api/v1/laundry-room/")
+            val status = webClient.get("https://mosogep-ng.sch.bme.hu/api/v2") // do not add trailing /
             if (status.status != HttpStatusCode.OK) {
-                throw UnreachableApiError("ApiV1")
+                throw UnreachableApiError("ApiV2")
             }
 
             val body: String = status.body()
             return parser.parse(body)
         } catch (ex: Exception) {
-            throw UnreachableApiError("ApiV1").initCause(ex)
+            throw UnreachableApiError("ApiV2").initCause(ex)
         }
     }
 }
